@@ -167,3 +167,68 @@ textarea:focus {
   justify-content: center; /* Centers the buttons inside it */
    margin-top: 1rem;
 }
+
+/* === NEW STYLES FOR MARKDOWN PREVIEW === */
+
+.markdown-preview {
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  white-space: pre-wrap; /* Ensures text wraps correctly */
+  overflow-x: hidden;
+}
+
+.markdown-preview h3 { /* For "SCORE: 9" */
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.markdown-preview p {
+  margin-bottom: 1.5rem;
+}
+
+.markdown-preview strong { /* For "**Strengths**", "**Database Proficiency**", etc. */
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.markdown-preview ul {
+  list-style-type: none;
+  padding-left: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.markdown-preview li {
+  position: relative;
+  padding-left: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-preview li::before {
+  content: '✓'; /* You can also use '•', '→', etc. */
+  position: absolute;
+  left: 0;
+  color: var(--accent-cyan);
+  font-weight: bold;
+}
+
+/* === NEW STYLES FOR IMPROVEMENT SUGGESTIONS === */
+
+.markdown-preview blockquote {
+  border-left: 4px solid var(--accent-purple);
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+  color: var(--text-primary);
+  background-color: rgba(18, 24, 43, 0.5); /* A slightly different background */
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.markdown-preview blockquote p {
+  margin-bottom: 0.5rem !important; /* Override default p margin */
+}

@@ -1,56 +1,77 @@
 import { useState } from 'react';
-import { saveAs } from 'file-saver';
+import ReactMarkdown from 'react-markdown';
 import './App.css';
 
 function App() {
+  // States for the core evaluation
   const [resume, setResume] = useState('');
   const [jobDescription, setJobDescription] = useState('');
-  const [tailoredResume, setTailoredResume] = useState('');
+  const [evaluationResult, setEvaluationResult] = useState('Your evaluation report will appear here...');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // --- NEW: State to manage the copy button's text ---
-  const [copyButtonText, setCopyButtonText] = useState('Copy Code');
+  const [copyButtonText, setCopyButtonText] = useState('Copy Report');
 
+  // States for the interview question feature
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [interviewQuestions, setInterviewQuestions] = useState('');
+  const [evaluationDone, setEvaluationDone] = useState(false);
+
+  // Handles the main resume evaluation
   const handleSubmit = async () => {
     setIsLoading(true);
-    setCopyButtonText('Copy Code'); // Reset copy button on new submission
-    setTailoredResume('Generating your tailored resume...');
+    setEvaluationDone(false); // Reset on new submission
+    setInterviewQuestions(''); // Clear old questions
+    setCopyButtonText('Copy Report');
+    setEvaluationResult('Evaluating your resume against the job description...');
     try {
-      const response = await fetch('http://localhost:8080/api/tailor-resume', {
+      const response = await fetch('http://localhost:8080/api/evaluate-resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resume, jobDescription }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Network response was not ok: ${errorText}`);
-      }
-
       const data = await response.json();
-      setTailoredResume(data.tailoredResume);
+      if (!response.ok) throw new Error(data.evaluation || 'An unknown error occurred during evaluation');
+      
+      setEvaluationResult(data.evaluation);
+      setEvaluationDone(true); // Mark evaluation as complete to show the next feature button
+
     } catch (error) {
       console.error('Error:', error);
-      setTailoredResume(`Failed to tailor resume. Please check the console for errors. Details: ${error.message}`);
+      setEvaluationResult(`Failed to evaluate resume. Details: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
+  
+  // Handles the interview question generation
+  const handleGenerateQuestions = async () => {
+    setIsGeneratingQuestions(true);
+    setInterviewQuestions('Generating tailored interview questions...');
+    try {
+      const response = await fetch('http://localhost:8080/api/generate-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume, jobDescription }),
+      });
 
-  const handleTxtDownload = () => {
-    const blob = new Blob([tailoredResume], { type: 'text/plain;charset=utf-8' });
-    saveAs(blob, 'tailored_resume.txt');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.questions || 'An unknown error occurred during question generation');
+
+      setInterviewQuestions(data.questions);
+
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      setInterviewQuestions(`Failed to generate questions. Details: ${error.message}`);
+    } finally {
+      setIsGeneratingQuestions(false);
+    }
   };
 
-  // --- NEW: Function to handle copying to clipboard ---
   const handleCopy = () => {
-    navigator.clipboard.writeText(tailoredResume).then(() => {
+    navigator.clipboard.writeText(evaluationResult).then(() => {
       setCopyButtonText('Copied!');
-      setTimeout(() => {
-        setCopyButtonText('Copy Code');
-      }, 2000); // Reset after 2 seconds
-    }, (err) => {
-      console.error('Could not copy text: ', err);
+      setTimeout(() => setCopyButtonText('Copy Report'), 2000);
+    }, () => {
       setCopyButtonText('Failed!');
     });
   };
@@ -63,7 +84,7 @@ function App() {
         <div className="nav-panel">
           <div>
             <h1 style={{ textAlign: 'left', fontSize: '1.8rem', color: 'var(--accent-cyan)', marginBottom: '2rem' }}>
-              AI Resume Maker
+              AI ATS Evaluator
             </h1>
           </div>
           <button
@@ -71,7 +92,7 @@ function App() {
             onClick={handleSubmit}
             disabled={isLoading || !resume || !jobDescription}
           >
-            {isLoading ? 'Tailoring...' : 'Tailor My Resume'}
+            {isLoading ? 'Evaluating...' : 'Evaluate My Resume'}
           </button>
         </div>
 
@@ -98,21 +119,36 @@ function App() {
 
         <div className="preview-panel">
           <div className="preview-header">
-            <h2>Tailored Resume Preview</h2>
+            <h2>Evaluation Report</h2>
             <div className="download-buttons">
-            {/* --- NEW: Copy Button Added Here --- */}
-            <button onClick={handleCopy} disabled={!tailoredResume || isLoading || tailoredResume.startsWith('Failed')} className="btn btn-primary">
-              {copyButtonText}
-            </button>
-            <button onClick={handleTxtDownload} disabled={!tailoredResume || isLoading || tailoredResume.startsWith('Failed')} className="btn btn-primary">
-              Download TXT
-            </button>
+              <button onClick={handleCopy} disabled={!evaluationResult || isLoading} className="btn btn-primary">
+                {copyButtonText}
+              </button>
+            </div>
           </div>
-          </div>
-          <pre id="preview-content">
-            {tailoredResume}
-          </pre>
           
+          <div id="preview-content" className="markdown-preview">
+            <ReactMarkdown>{evaluationResult}</ReactMarkdown>
+          </div>
+          
+          {/* This section only appears after a successful evaluation */}
+          {evaluationDone && !isLoading && (
+            <div className="feature-section">
+              <button 
+                onClick={handleGenerateQuestions} 
+                disabled={isGeneratingQuestions} 
+                className="btn btn-primary make-button"
+              >
+                {isGeneratingQuestions ? 'Generating...' : '✨ Generate Interview Questions'}
+              </button>
+              
+              {interviewQuestions && (
+                <div id="questions-content" className="markdown-preview">
+                  <ReactMarkdown>{interviewQuestions}</ReactMarkdown>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>
