@@ -8,7 +8,7 @@ import contextlib
 # --- CONFIGURATION ---
 # IMPORTANT: Replace "YOUR_API_KEY_HERE" with your actual Google Gemini API key
 # Or, set it as an environment variable named GEMINI_API_KEY
-API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDzlT-wD0owETwpqiAnQ0UfhDWf6Ug40WQ")
+API_KEY = os.getenv("GEMINI_API_KEY", "Your API Key")
 MODEL_NAME = "gemini-2.5-flash-lite"
 
 # --- HELPER FUNCTIONS ---
